@@ -1,0 +1,17 @@
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+// Añadir importación de la clase Producto (si están en paquetes diferentes)
+// import yourpackage.Producto;
+
+public class BinarySearchTreeTest {
+    @Test
+    public void testInsercionYBusqueda() {
+        BinarySearchTree<Producto> bst = new BinarySearchTree<>();
+        Producto p1 = new Producto("SKU123", 799.99, 699.99, "Licuadora", "Electrodomésticos");
+        Producto p2 = new Producto("SKU456", 199.50, 159.99, "Tostadora", "Cocina");
+        
+        bst.insert(p1);
+        bst.insert(p2);
+        
+        //
