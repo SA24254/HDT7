@@ -1,0 +1,119 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Scanner;
+import java.util.stream.Stream;
+
+class Producto implements Comparable<Producto> {
+    private String sku;
+    private double priceRetail;
+    private double priceCurrent;
+    private String productName;
+    private String category;
+
+    public Producto(String sku, double priceRetail, double priceCurrent, String productName, String category) {
+        this.sku = sku;
+        this.priceRetail = priceRetail;
+        this.priceCurrent = priceCurrent;
+        this.productName = productName;
+        this.category = category;
+    }
+
+    // Getters
+    public String getSku() { return sku; }
+    public double getPriceRetail() { return priceRetail; }
+    public double getPriceCurrent() { return priceCurrent; }
+    public String getProductName() { return productName; }
+    public String getCategory() { return category; }
+
+    @Override
+    public int compareTo(Producto otro) { return this.sku.compareTo(otro.sku); }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Producto producto = (Producto) o;
+        return sku.equals(producto.sku);
+    }
+
+    @Override
+    public int hashCode() { return sku.hashCode(); }
+}
+
+class BinarySearchTree<E extends Comparable<E>> {
+    private Node root;
+
+    private class Node {
+        E data;
+        Node left, right;
+        Node(E data) { this.data = data; }
+    }
+
+    public void insert(E data) { root = insertRec(root, data); }
+
+    private Node insertRec(Node root, E data) {
+        if (root == null) return new Node(data);
+        int cmp = data.compareTo(root.data);
+        if (cmp < 0) root.left = insertRec(root.left, data);
+        else if (cmp > 0) root.right = insertRec(root.right, data);
+        return root;
+    }
+
+    public E search(E key) { return searchRec(root, key); }
+
+    private E searchRec(Node root, E key) {
+        if (root == null) return null;
+        int cmp = key.compareTo(root.data);
+        if (cmp < 0) return searchRec(root.left, key);
+        else if (cmp > 0) return searchRec(root.right, key);
+        else return root.data;
+    }
+}
+
+public class Main2 {
+    public static void main(String[] args) {
+        BinarySearchTree<Producto> bst = new BinarySearchTree<>();
+
+        // Cargar datos desde el CSV especificado
+        try (Stream<String> lines = Files.lines(Paths.get("home appliance skus lowes.csv"))) {
+            lines.skip(1)
+                 .map(line -> line.split(","))
+                 .filter(parts -> parts.length >= 5)
+                 .forEach(parts -> {
+                     try {
+                         Producto p = new Producto(
+                             parts[0].trim(),
+                             Double.parseDouble(parts[1].trim()),
+                             Double.parseDouble(parts[2].trim()),
+                             parts[3].trim(),
+                             parts[4].trim()
+                         );
+                         bst.insert(p);
+                     } catch (Exception e) {
+                         System.err.println("Error en línea: " + String.join(",", parts));
+                     }
+                 });
+        } catch (IOException e) {
+            System.err.println("Archivo no encontrado: home appliance skus lowes.csv");
+            return;
+        }
+
+        // Búsqueda interactiva
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Ingrese SKU a buscar: ");
+        String sku = scanner.nextLine().trim();
+        Producto resultado = bst.search(new Producto(sku, 0, 0, "", ""));
+
+        if (resultado != null) {
+            System.out.println("\n[Resultado]");
+            System.out.println("SKU: " + resultado.getSku());
+            System.out.println("Nombre: " + resultado.getProductName());
+            System.out.println("Categoría: " + resultado.getCategory());
+            System.out.printf("Precio Retail: $%.2f\n", resultado.getPriceRetail());
+            System.out.printf("Precio Actual: $%.2f\n", resultado.getPriceCurrent());
+        } else {
+            System.out.println("SKU no encontrado.");
+        }
+    }
+}
